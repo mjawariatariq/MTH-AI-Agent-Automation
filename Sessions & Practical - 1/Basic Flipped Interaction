@@ -1,0 +1,33 @@
+"""
+AI Workshop Planner
+"""
+
+import google.generativeai as genai
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+model = genai.GenerativeModel('gemini-2.5-flash')
+
+print("=" * 70)
+print(" AI WORKSHOP PLANNER - Flipped Interaction")
+print("=" * 70)
+
+# Initial prompt - User gives basic idea
+user_request = """
+I want to plan an AI workshop for students.
+Ask me one question at a time to understand my requirements,
+then suggest an outline.
+"""
+
+print("\n User: I want to plan an AI workshop for students.")
+print("\n AI: Asking clarifying questions...\n")
+
+# Get AI's first question
+response = model.generate_content(user_request)
+print(f" AI: {response.text}")
+
+print("\n" + "-" * 70)
+print(" NOW IT'S YOUR TURN!")
+print("-" * 70)
