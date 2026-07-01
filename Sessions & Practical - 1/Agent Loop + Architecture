@@ -1,0 +1,72 @@
+"""
+Perceive → Process → Decide → Act
+"""
+
+class Agent:
+    def __init__(self):
+        
+# 4 Main Components
+        self.persona = "Friendly Customer Support"
+        self.memory = []  # Learning
+        self.tools = {    # Capabilities
+            "check_order": self.check_order,
+            "refund": self.process_refund
+        }
+        self.knowledge = {
+            "policy": "30-day refund policy",
+            "hours": "9 AM - 6 PM"
+        }
+    
+# TOOLS
+    def check_order(self, order_id):
+        return f"Order #{order_id}: Shipped, arriving tomorrow"
+    
+    def process_refund(self, order_id):
+        return f"Refund #{order_id}: Approved, money back in 5 days"
+    
+# AGENT LOOP
+    def process(self, user_input):
+        print("."*50)
+        print(" AGENT LOOP IN ACTION")
+        print("."*50)
+        
+# PERCEIVE (What user said)
+        print(f"\n PERCEIVE: User → '{user_input}'")
+        self.memory.append({"user": user_input})
+        
+# PROCESS (Think with brain)
+        print(f" PROCESS: Analyzing...")
+        if "order" in user_input.lower():
+            action = "check_order"
+        elif "refund" in user_input.lower():
+            action = "refund"
+        else:
+            action = "respond"
+        
+# DECIDE (Choose action)
+        print(f" DECIDE: Action selected → {action}")
+        
+# ACT (Execute)
+        print(f" ACT: Executing...")
+        if action in self.tools:
+            result = self.tools[action]("123")
+        else:
+            result = f"Hi! I can help with orders or refunds. {self.knowledge['policy']}"
+        
+        print(f" Result: {result}")
+        self.memory.append({"agent": result})
+        
+        print(f"\n Memory: {len(self.memory)} interactions")
+        return result
+
+# RUN DEMO
+agent = Agent()
+print("\n Agent Starting...\n")
+
+queries = ["Check my order", "I want refund", "Hello"]
+
+for q in queries:
+    agent.process(q)
+    print("."*40)
+
+print("\n KEY TAKEAWAY: Har Agent yehi loop follow karta hai!")
