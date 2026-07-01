@@ -1,0 +1,57 @@
+"""
+Self-Prompting with Refinement
+Goal: AI apna output khud improve kare
+"""
+
+import google.generativeai as genai
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+model = genai.GenerativeModel('gemini-2.5-flash')
+
+print("=" * 70)
+print(" SELF-PROMPTING WITH REFINEMENT")
+print("=" * 70)
+
+# STEP 1: Draft
+print("\n STEP 1: Initial Draft")
+print("-" * 70)
+
+draft_prompt = """
+Explain Quantum Computing to a 10-year-old in 5 sentences.
+Keep it simple and fun.
+"""
+
+draft_response = model.generate_content(draft_prompt)
+print("AI's Draft:")
+print(draft_response.text)
+
+# STEP 2: Self-Critique & Refine
+print("\n STEP 2: Self-Critique & Refinement")
+print("-" * 70)
+
+refine_prompt = f"""
+You are an expert teacher. Look at your previous explanation:
+
+{draft_response.text}
+
+Now:
+1. What did you miss or could improve?
+2. What would make it more engaging?
+3. Add a fun analogy that kids would love
+4. Make it MORE exciting and interactive
+
+Rewrite the explanation to be MUCH BETTER.
+Also add a question at the end to engage the child.
+"""
+
+refined_response = model.generate_content(refine_prompt)
+print("AI's Refined Version:")
+print(refined_response.text)
+
+print("\n" + "=" * 70)
+print(" KEY INSIGHT:")
+print("AI ne apne output ko judge kiya aur behtar banaya!")
+print("Yeh auto-correction ka basic foundation hai! ")
