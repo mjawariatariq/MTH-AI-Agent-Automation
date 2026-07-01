@@ -1,0 +1,109 @@
+"""
+Complete Flipped Interaction Flow
+"""
+
+def flipped_interaction():
+    """Full flipped interaction between user and AI"""
+    
+    print("=" * 70)
+    print(" FLIPPED INTERACTION DEMO")
+    print("=" * 70)
+    
+# The conversation starts with user's basic request
+    conversation = """
+    User: I want to plan an AI workshop for students.
+    """
+    
+# AI asks first question
+    prompt = f"""
+    You are an AI workshop planner. The user wants to plan a workshop.
+    
+    Conversation so far:
+    {conversation}
+    
+    Ask ONE clarifying question to understand their requirements better.
+    """
+    
+    response = model.generate_content(prompt)
+    question1 = response.text
+    print(f"\n AI: {question1}")
+        
+# User answers (simulated)
+    user_answer1 = input("\n Your answer: ")
+    
+# Update conversation
+    conversation += f"\nUser: {user_answer1}"
+    conversation += f"\nAI: {question1}"
+    
+# AI asks second question
+    prompt2 = f"""
+    You are an AI workshop planner.
+    
+    Conversation so far:
+    {conversation}
+    
+    Ask ONE MORE clarifying question.
+    """
+    
+    response2 = model.generate_content(prompt2)
+    question2 = response2.text
+    print(f"\n AI: {question2}")
+    
+# User answers
+    user_answer2 = input("\n Your answer: ")
+    
+# Update conversation
+    conversation += f"\nUser: {user_answer2}"
+    conversation += f"\nAI: {question2}"
+    
+# AI asks third question (optional)
+    choice = input("\n Want AI to ask one more question? (yes/no): ")
+    if choice.lower() == 'yes':
+        prompt3 = f"""
+        You are an AI workshop planner.
+        
+        Conversation so far:
+        {conversation}
+        
+        Ask ONE FINAL clarifying question.
+        """
+        
+        response3 = model.generate_content(prompt3)
+        question3 = response3.text
+        print(f"\n AI: {question3}")
+        
+        user_answer3 = input("\n Your answer: ")
+        conversation += f"\nUser: {user_answer3}"
+        conversation += f"\nAI: {question3}"
+    
+# Now AI creates the workshop outline
+    print("\n" + "=" * 70)
+    print(" GENERATING WORKSHOP OUTLINE...")
+    print("=" * 70)
+    
+    outline_prompt = f"""
+    Based on this conversation, create a complete AI workshop outline:
+    
+    {conversation}
+    
+    Create a detailed workshop outline with:
+    1. Workshop Title
+    2. Target Audience
+    3. Duration
+    4. Prerequisites
+    5. 5-7 Topics with subtopics
+    6. Hands-on activities
+    7. Tools needed
+    8. Learning outcomes
+    
+    Be specific and practical.
+    """
+    
+    final_response = model.generate_content(outline_prompt)
+    print("\n WORKSHOP OUTLINE:")
+    print("-" * 70)
+    print(final_response.text)
+    print("-" * 70)
+
+# Run the interaction
+# flipped_interaction()
