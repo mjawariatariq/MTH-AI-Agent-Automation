@@ -1,5 +1,6 @@
 """
 Perceive → Process → Decide → Act
+Foundation - Har agent yahi use karta hai
 """
 
 class Agent:
