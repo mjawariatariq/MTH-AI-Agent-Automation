@@ -1,0 +1,49 @@
+"""
+Few-Shot Prompting - Funny Movie Titles
+"""
+
+import google.generativeai as genai
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+model = genai.GenerativeModel('gemini-2.5-flash')
+
+print("=" * 70)
+print(" FEW-SHOT PROMPTING - Funny Movie Titles")
+print("=" * 70)
+
+# FEW-SHOT PROMPT with examples
+few_shot_prompt = """
+Translate these movie titles into funny Urdu style:
+
+Titanic -> Bada Jahaz Doob Gaya.
+Avatar -> Neela Insaan.
+Inception -> Sapno ka Chakkar.
+The Dark Knight -> Andheri Raat ka Hero.
+Frozen -> Barf ki Rani.
+
+Now translate these movies using the SAME funny style:
+1. Mission Impossible
+2. Jurassic Park
+3. Harry Potter
+4. Spider-Man
+5. The Matrix
+
+Rules:
+- Keep it funny and desi
+- Use simple Urdu/Urdu mixed with English
+- Be creative but follow the pattern
+"""
+
+response = model.generate_content(few_shot_prompt)
+
+print("\n AI's Response:")
+print("-" * 70)
+print(response.text)
+print("-" * 70)
+
+print("\n KEY INSIGHT:")
+print("AI learned the style from examples!")
+print("Without any training, just by giving examples, the AI matched the style!")
