@@ -1,0 +1,103 @@
+"""
+STRUCTURED DATA EXTRACTION (AI Shim)
+Unstructured text → JSON format
+Yehi automation ki foundation hai!
+"""
+
+import json
+import re
+from datetime import datetime
+
+class DataExtractor:
+    def extract_info(self, text):
+        """Convert unstructured text to JSON"""
+        print("\n" + "="*60)
+        print(" UNSTRUCTURED INPUT:")
+        print("-"*40)
+        print(text)
+        
+# Extract data using simple patterns
+        data = {}
+        
+# Email extraction
+        email_match = re.search(r'[\w\.-]+@[\w\.-]+\.\w+', text)
+        if email_match:
+            data["email"] = email_match.group()
+        
+# Phone extraction
+        phone_match = re.search(r'(\+?\d{1,3}[-.]?)?\(?\d{3}\)?[-.]?\d{3}[-.]?\d{4}', text)
+        if phone_match:
+            data["phone"] = phone_match.group()
+        
+# Amount extraction
+        amount_match = re.search(r'\$\d+\.?\d*', text)
+        if amount_match:
+            data["amount"] = amount_match.group()
+        
+# Date extraction
+        date_match = re.search(r'\d{1,2}/\d{1,2}/\d{4}', text)
+        if date_match:
+            data["date"] = date_match.group()
+        
+# Name extraction (simple)
+        if "Name:" in text:
+            name = text.split("Name:")[1].split("\n")[0].strip()
+            data["name"] = name
+        
+# Add metadata
+        data["extracted_at"] = datetime.now().isoformat()
+        data["length"] = len(text)
+        
+        return data
+    
+    def format_output(self, data):
+        """Pretty print JSON"""
+        print("\n" + "="*60)
+        print(" STRUCTURED OUTPUT (JSON):")
+        print("-"*40)
+        print(json.dumps(data, indent=2))
+        print("-"*40)
+        print(" Now machine-readable! Can be used by:")
+        print("   • Databases")
+        print("   • APIs")
+        print("   • Automation workflows")
+        print("   • Analytics tools")
+
+# RUN DEMO 
+print("STRUCTURED DATA EXTRACTION - Unstructured to JSON")
+print("="*60)
+
+extractor = DataExtractor()
+
+# Unstructured text examples
+texts = [
+    """
+    CUSTOMER ORDER
+    
+    Name: John Smith
+    Email: john.smith@gmail.com
+    Phone: (555) 123-4567
+    Order Date: 15/01/2024
+    Total Amount: $249.99
+    Items: 3
+    Status: Shipped
+    """,
+    
+    """
+    SUPPORT TICKET #2345
+    
+    Contact: Sarah Johnson
+    Email: sarah.j@techcorp.com
+    Phone: 555-987-6543
+    Issue: Payment failed - $49.99
+    Date: 20/01/2024
+    Priority: High
+    """
+]
+
+for i, text in enumerate(texts, 1):
+    print(f"\n Example {i}:")
+    structured = extractor.extract_info(text)
+    extractor.format_output(structured)
+
+print("\n KEY TAKEAWAY: AI Shim unstructured data ko automation-ready JSON mein convert karta hai!")
