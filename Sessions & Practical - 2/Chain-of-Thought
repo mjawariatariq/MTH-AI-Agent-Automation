@@ -1,0 +1,40 @@
+import google.generativeai as genai
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+model = genai.GenerativeModel('gemini-2.5-flash')
+
+# Simple Problem - Without CoT
+
+print("=" * 60)
+print(" TASK 1A: Without CoT")
+print("=" * 60)
+
+question = "Rohan is 12 years old. His father's age is 4 times his age. What will be their ages after 5 years?"
+
+print(f"Question: {question}\n")
+response = model.generate_content(question)
+print("Answer:", response.text)
+
+print("\n" + "-" * 60)
+
+
+# ----------------------------------------------------------------------------------------------------------------------------
+
+
+# Same Problem - With CoT
+print("\n TASK 1B: With CoT")
+print("=" * 60)
+
+cot_question = question + "\n\nLet's think step by step."
+response = model.generate_content(cot_question)
+print("Answer:", response.text)
+
+print("\n Observation:")
+print("""
+1. What difference did you notice?
+2. Did the AI show steps?
+3. Was the answer clearer?
+""")
