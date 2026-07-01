@@ -1,6 +1,7 @@
 """
 REACT PROMPTING - Reasoning + Acting
 Agent sochta hai, action karta hai, aur seekhta hai!
+Intelligence - Agent ko autonomous banata hai
 """
 
 import time
