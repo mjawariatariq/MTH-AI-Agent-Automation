@@ -1,0 +1,47 @@
+import google.generativeai as genai
+import os
+import json
+from dotenv import load_dotenv
+
+load_dotenv()
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+model = genai.GenerativeModel('gemini-2.5-flash')
+
+print("=" * 60)
+print(" RESUME PARSER - Extract Information")
+print("=" * 60)
+
+# Sample Resume Text
+resume = """
+Name: Ahmad Raza
+Email: ahmad.raza@email.com
+Phone: 0300-1234567
+City: Lahore
+Skills: Python, AI, Machine Learning
+Experience: 3 years as Data Scientist
+Education: MS Computer Science from LUMS
+"""
+
+print(" Resume Text:")
+print("-" * 40)
+print(resume)
+print("-" * 40)
+
+prompt = f"""
+Extract information from this resume:
+
+{resume}
+
+Return ONLY JSON with these keys:
+- "name"
+- "email" 
+- "phone"
+- "city"
+- "skills" (as a list)
+- "experience"
+- "education"
+"""
+
+response = model.generate_content(prompt)
+print("\n Extracted JSON:")
+print(response.text)
