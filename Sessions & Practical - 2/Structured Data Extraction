@@ -2,6 +2,7 @@
 STRUCTURED DATA EXTRACTION (AI Shim)
 Unstructured text → JSON format
 Yehi automation ki foundation hai!
+Integration - Automation tools ke sath connect karta hai
 """
 
 import json
