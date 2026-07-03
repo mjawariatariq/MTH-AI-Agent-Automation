@@ -1,1 +1,149 @@
-.....
+import google.generativeai as genai
+import json
+
+# STEP 1: Configure Gemini API - step 1
+
+# Replace with your actual API key
+genai.configure(api_key="YOUR_GEMINI_API_KEY")
+model = genai.GenerativeModel("gemini-1.5-flash")
+
+# Define the weather function - step 2
+
+def get_weather(city: str) -> str:
+    """Returns mock weather data for a given city"""
+    weather_data = {
+        "paris": "Cloudy, 18°C, light rain",
+        "london": "Foggy, 12°C, light drizzle",
+        "karachi": "Hot and humid, 35°C, clear sky",
+        "tokyo": "Sunny, 25°C, light breeze",
+        "lahore": "Smoggy, 30°C, moderate pollution",
+        "dubai": "Sunny, 42°C, extreme heat",
+        "new york": "Partly cloudy, 22°C, windy",
+        "sydney": "Sunny, 28°C, mild breeze"
+    }
+    
+    city_lower = city.lower()
+    if city_lower in weather_data:
+        return f"{city}: {weather_data[city_lower]}"
+    else:
+        return f"{city}: Weather data not available"
+
+#  Define the tool schema for Gemini - step 3
+
+weather_tool = {
+    "name": "get_weather",
+    "description": "Get the current weather for a specified city. Use this when the user asks about weather, temperature, or climate of any city.",
+    "parameters": {
+        "type": "object",
+        "properties": {
+            "city": {
+                "type": "string",
+                "description": "The name of the city, e.g., 'Paris', 'London', 'Karachi'"
+            }
+        },
+        "required": ["city"]
+    }
+}
+
+# The Agent - Main logic - step 4
+
+def run_agent(user_query: str):
+    """Main agent that processes user query using Gemini function calling"""
+    
+    print(f"\n User: {user_query}")
+    
+# Prepare the prompt
+    prompt = f"""
+You are a weather assistant. You have access to the following function:
+
+Function: get_weather(city: str) -> str
+Description: Returns weather information for a given city.
+
+If the user asks about weather in any city, you MUST call the get_weather function with the city name.
+If the user asks something else, just reply normally.
+
+User query: {user_query}
+
+IMPORTANT: 
+- If weather is asked, respond ONLY with: FUNCTION_CALL: get_weather(city="city_name")
+- Replace city_name with the actual city from the query
+- If no weather is asked, respond normally
+"""
+    
+# Get Gemini's response
+    response = model.generate_content(prompt)
+    response_text = response.text.strip()
+    
+# Check if Gemini wants to call a function
+    if "FUNCTION_CALL:" in response_text:
+        print(" Agent: I need to call the weather function...")
+        
+# Extract the function call
+        try:
+# Parse the function call
+            function_call_part = response_text.split("FUNCTION_CALL:")[1].strip()
+# Example: get_weather(city="paris")
+            
+# Extract city name using simple parsing
+            if "get_weather" in function_call_part:
+# Find city inside quotes
+                import re
+                match = re.search(r'city=["\']([^"\']+)["\']', function_call_part)
+                if match:
+                    city = match.group(1)
+                    print(f" Function Called: get_weather(city='{city}')")
+                    
+# Call the actual function
+                    weather_result = get_weather(city)
+                    print(f" Result: {weather_result}")
+                    
+# Generate final response using Gemini
+                    final_prompt = f"""
+The user asked: "{user_query}"
+
+The weather function returned: "{weather_result}"
+
+Now give a friendly, natural response to the user with this weather information.
+"""
+                    final_response = model.generate_content(final_prompt)
+                    print(f" Assistant: {final_response.text.strip()}")
+                else:
+                    print(" Assistant: Could not find city in function call.")
+            else:
+                print(f" Assistant: {response_text}")
+                
+        except Exception as e:
+            print(f" Assistant: Error - {str(e)}")
+            print(f"Raw response: {response_text}")
+    else:
+        # No function call needed
+        print(f" Assistant: {response_text}")
+
+# Test the Agent - step 5
+
+if __name__ == "__main__":
+    print("=" * 60)
+    print("  WEATHER REPORT ASSISTANT")
+    print("=" * 60)
+    
+# Test queries
+    test_queries = [
+        "Paris ka mausam kaisa hai?",
+        "What's the weather in London?",
+        "Tell me about Karachi weather",
+        "How's the temperature in Tokyo?",
+        "Hello, how are you?",
+        "Is it hot in Dubai?"
+    ]
+    
+    for query in test_queries:
+        run_agent(query)
+        print("-" * 50)
+    
+# Interactive mode
+    print("\n Type your query (or 'exit' to quit):")
+    while True:
+        user_input = input("\nYou: ")
+        if user_input.lower() == "exit":
+            break
+        run_agent(user_input)
