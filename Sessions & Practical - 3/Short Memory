@@ -1,0 +1,54 @@
+import google.generativeai as genai
+
+genai.configure(api_key="YOUR_GEMINI_API_KEY")
+model = genai.GenerativeModel("gemini-1.5-flash")
+
+messages = []
+
+print("Chat History Keeper")
+print("Ask 3 questions to test memory")
+
+questions = [
+    "Apna naam batao:",
+    "Tumhe kis cheez mein interest hai?",
+    "Mera favourite topic kya hai?"
+]
+
+for question in questions:
+    print(f"Assistant: {question}")
+    user_input = input("You: ")
+    
+    messages.append({"role": "user", "content": user_input})
+    
+    memory_context = ""
+    for msg in messages:
+        if msg["role"] == "user":
+            memory_context += f"User said: {msg['content']}\n"
+    
+    prompt = f"""
+You are a friendly assistant. Remember everything the user tells you.
+
+Previous conversation:
+{memory_context}
+
+User's message: {user_input}
+
+Respond naturally and show that you remember what they told you.
+"""
+    
+    response = model.generate_content(prompt)
+    bot_response = response.text.strip()
+    messages.append({"role": "assistant", "content": bot_response})
+    print(f"Assistant: {bot_response}")
+
+print("\nMemory Test:")
+test_prompt = f"""
+Based on everything the user told you, answer:
+1. What is the user's name?
+2. What does the user like?
+3. What is your favorite topic?
+
+All messages: {messages}
+"""
+test_response = model.generate_content(test_prompt)
+print(test_response.text.strip())
