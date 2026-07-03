@@ -1,0 +1,78 @@
+# long_term_memory.py
+import google.generativeai as genai
+import json
+import os
+
+genai.configure(api_key="YOUR_GEMINI_API_KEY")
+model = genai.GenerativeModel("gemini-1.5-flash")
+
+class MemoryAssistant:
+    def __init__(self, storage_file="memory.json"):
+        self.storage_file = storage_file
+        self.memory_data = self.load_memory()
+    
+    def load_memory(self):
+        if os.path.exists(self.storage_file):
+            with open(self.storage_file, 'r') as f:
+                return json.load(f)
+        return {}
+    
+    def save_memory(self):
+        with open(self.storage_file, 'w') as f:
+            json.dump(self.memory_data, f, indent=2)
+    
+    def save_preference(self, user_id, preference):
+        if user_id not in self.memory_data:
+            self.memory_data[user_id] = []
+        self.memory_data[user_id].append({"content": preference})
+        self.save_memory()
+        return "Preference saved"
+    
+    def get_preferences(self, user_id):
+        return self.memory_data.get(user_id, [])
+    
+    def ask_with_memory(self, user_id, query):
+        memories = self.get_preferences(user_id)
+        memory_context = "\n".join([m["content"] for m in memories[:5]])
+        
+        prompt = f"""
+User ID: {user_id}
+
+Previous memories:
+{memory_context if memory_context else "No previous data"}
+
+Current question: {query}
+
+Use the memories to give a personalized response.
+"""
+        response = model.generate_content(prompt)
+        return response.text.strip()
+
+assistant = MemoryAssistant()
+user_id = "student_001"
+
+print("SESSION 1 - Saving Preferences")
+preferences = [
+    "Mujhe Python pasand hai",
+    "Mujhe coding seekhna pasand hai",
+    "Mera favorite topic AI hai",
+    "Mera naam Ali hai"
+]
+
+for pref in preferences:
+    result = assistant.save_preference(user_id, pref)
+    print(f"Saved: {pref}")
+
+print("\nSESSION 2 - Retrieving Preferences")
+new_assistant = MemoryAssistant()
+
+test_queries = [
+    "Main kya seekhna pasand karta hoon?",
+    "Mera naam kya hai?",
+    "Mujhe kaunsi programming language pasand hai?"
+]
+
+for query in test_queries:
+    print(f"You: {query}")
+    response = new_assistant.ask_with_memory(user_id, query)
+    print(f"Assistant: {response}")
