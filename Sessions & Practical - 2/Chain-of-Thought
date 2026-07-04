@@ -1,44 +1,113 @@
 """
-Chain of Thought
+Chain of Thought (CoT) - Step by Step Reasoning
 """
 
 import google.generativeai as genai
-import os
-from dotenv import load_dotenv
+from google.colab import userdata
 
-load_dotenv()
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+# Get API key from Colab secrets
+api_key = userdata.get('GOOGLE_API_KEY')
+genai.configure(api_key=api_key)
 model = genai.GenerativeModel('gemini-2.5-flash')
 
-# Simple Problem - Without CoT
-
 print("=" * 60)
-print(" TASK 1A: Without CoT")
+print("CHAIN OF THOUGHT - Step by Step Reasoning")
+print("=" * 60)
+
+# Simple Problem - Without CoT
+print("\n" + "=" * 60)
+print("TASK 1A: Without CoT (Direct Answer)")
 print("=" * 60)
 
 question = "Rohan is 12 years old. His father's age is 4 times his age. What will be their ages after 5 years?"
 
 print(f"Question: {question}\n")
 response = model.generate_content(question)
-print("Answer:", response.text)
+print("Answer:")
+print(response.text)
 
 print("\n" + "-" * 60)
 
-
-# ----------------------------------------------------------------------------------------------------------------------------
-
-
 # Same Problem - With CoT
-print("\n TASK 1B: With CoT")
+print("\n" + "=" * 60)
+print("TASK 1B: With CoT (Step by Step)")
 print("=" * 60)
 
-cot_question = question + "\n\nLet's think step by step."
+cot_question = question + "\n\nLet's think step by step and show all calculations."
 response = model.generate_content(cot_question)
-print("Answer:", response.text)
+print("Answer with CoT:")
+print(response.text)
 
-print("\n Observation:")
+print("\n" + "-" * 60)
+
+# Comparison
+print("\n" + "=" * 60)
+print("OBSERVATION & COMPARISON")
+print("=" * 60)
 print("""
-1. What difference did you notice?
-2. Did the AI show steps?
-3. Was the answer clearer?
+1. Without CoT: AI gives direct answer without showing reasoning
+2. With CoT: AI shows step-by-step process
+3. CoT makes the answer more transparent and trustworthy
+4. CoT helps in complex problems where reasoning matters
 """)
+
+# Complex Problem - With CoT
+print("\n" + "=" * 60)
+print("TASK 2: Complex Problem with CoT")
+print("=" * 60)
+
+complex_question = """
+A store sells apples at $2 each and oranges at $3 each.
+If a customer buys 5 apples and 3 oranges with a $20 bill,
+how much change do they get back? Show your reasoning.
+"""
+
+cot_complex = complex_question + "\n\nLet's solve this step by step:"
+response = model.generate_content(cot_complex)
+print("Complex Problem Solution:")
+print(response.text)
+
+# Demonstration: CoT vs Non-CoT comparison function
+print("\n" + "=" * 60)
+print("TASK 3: Compare CoT vs Non-CoT for Different Problems")
+print("=" * 60)
+
+def compare_without_with_cot(question):
+    """Compare responses with and without CoT"""
+    print(f"\nQuestion: {question}")
+    print("-" * 40)
+    
+    # Without CoT
+    print("\n[Without CoT]")
+    response1 = model.generate_content(question)
+    print(response1.text)
+    
+    # With CoT
+    print("\n[With CoT]")
+    cot_question = question + "\n\nLet's think step by step."
+    response2 = model.generate_content(cot_question)
+    print(response2.text)
+    print("-" * 40)
+
+# Test with different questions
+test_questions = [
+    "If a train travels at 60 km/h for 2.5 hours, how far does it travel?",
+    "A rectangle has length 8m and width 5m. What is its perimeter and area?",
+    "Sarah bought 3 books at $15 each and 2 notebooks at $5 each. How much did she spend in total?"
+]
+
+for i, q in enumerate(test_questions, 1):
+    print(f"\nExample {i}:")
+    compare_without_with_cot(q)
+
+print("\n" + "=" * 60)
+print("KEY TAKEAWAYS")
+print("=" * 60)
+print("""
+1. Chain of Thought forces the AI to show reasoning steps
+2. Makes answers more transparent and verifiable
+3. Helps catch errors in reasoning
+4. Essential for complex mathematical and logical problems
+5. Builds trust by showing the thinking process
+""")
+print("=" * 60)
