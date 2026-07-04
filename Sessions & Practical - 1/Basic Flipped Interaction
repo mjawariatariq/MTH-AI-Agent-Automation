@@ -1,33 +1,116 @@
 """
-AI Workshop Planner
+AI Workshop Planner - Flipped Interaction
 """
 
 import google.generativeai as genai
-import os
-from dotenv import load_dotenv
+from google.colab import userdata
 
-load_dotenv()
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+print("=" * 70)
+print("AI WORKSHOP PLANNER - Flipped Interaction")
+print("=" * 70)
+
+# Get API key from Colab secrets
+api_key = userdata.get('GOOGLE_API_KEY')
+genai.configure(api_key=api_key)
 model = genai.GenerativeModel('gemini-2.5-flash')
 
-print("=" * 70)
-print(" AI WORKSHOP PLANNER - Flipped Interaction")
-print("=" * 70)
+# Initial system prompt for the AI
+system_prompt = """
+You are an AI workshop planning assistant. Your role is to help the user design a workshop by asking ONE question at a time.
 
-# Initial prompt - User gives basic idea
-user_request = """
-I want to plan an AI workshop for students.
-Ask me one question at a time to understand my requirements,
-then suggest an outline.
+Start by asking the first clarifying question about the AI workshop they want to plan. Keep questions focused on:
+1. Target audience (age group, background, experience level)
+2. Workshop duration and format
+3. Specific AI topics or technologies
+4. Learning objectives
+5. Available resources and constraints
+
+Ask ONLY ONE question at a time. Wait for the user's response before asking the next question.
 """
 
-print("\n User: I want to plan an AI workshop for students.")
-print("\n AI: Asking clarifying questions...\n")
+print("\nUser: I want to plan an AI workshop for students.")
+print("\nAI: Let me help you plan this workshop. I'll ask you questions one at a time.\n")
+
+# Get user's initial idea
+user_idea = "I want to plan an AI workshop for students."
+
+# Start the conversation
+conversation_history = [
+    {"role": "user", "parts": [f"{system_prompt}\n\nUser says: {user_idea}"]}
+]
 
 # Get AI's first question
-response = model.generate_content(user_request)
-print(f" AI: {response.text}")
+response = model.generate_content(conversation_history)
+print(f"AI: {response.text}")
 
+# Interactive loop for asking questions
 print("\n" + "-" * 70)
-print(" NOW IT'S YOUR TURN!")
+print("NOW IT'S YOUR TURN! Enter your answers (type 'done' to finish)")
 print("-" * 70)
+
+conversation_history.append({"role": "model", "parts": [response.text]})
+
+# Collect user responses
+user_responses = []
+question_count = 1
+
+while True:
+    user_input = input(f"\nYour answer #{question_count}: ")
+    
+    if user_input.lower() == 'done':
+        break
+    
+    if user_input.strip():
+        user_responses.append(user_input)
+        conversation_history.append({"role": "user", "parts": [user_input]})
+        question_count += 1
+        
+        # Get next question from AI
+        follow_up_prompt = {
+            "role": "user", 
+            "parts": ["Ask the next clarifying question about the workshop. Based on what you know so far, ask ONE specific question."]
+        }
+        conversation_history.append(follow_up_prompt)
+        
+        response = model.generate_content(conversation_history)
+        print(f"\nAI: {response.text}")
+        conversation_history.append({"role": "model", "parts": [response.text]})
+    else:
+        print("Please enter a valid response or type 'done' to finish.")
+
+# Generate final workshop outline
+if user_responses:
+    print("\n" + "=" * 70)
+    print("GENERATING WORKSHOP OUTLINE...")
+    print("=" * 70)
+    
+    summary_prompt = f"""
+    Based on these user responses about planning an AI workshop:
+    
+    {chr(10).join([f"Q{i+1}: {resp}" for i, resp in enumerate(user_responses)])}
+    
+    Please create a comprehensive workshop outline including:
+    1. Workshop title and description
+    2. Target audience and prerequisites
+    3. Learning objectives
+    4. Agenda/timeline
+    5. Required materials and resources
+    6. Interactive activities
+    7. Assessment methods
+    8. Next steps and recommendations
+    
+    Make it practical, actionable, and tailored to the user's needs.
+    """
+    
+    conversation_history.append({"role": "user", "parts": [summary_prompt]})
+    final_response = model.generate_content(conversation_history)
+    
+    print("\n" + "=" * 70)
+    print("YOUR CUSTOM WORKSHOP PLAN")
+    print("=" * 70)
+    print(final_response.text)
+    print("\n" + "=" * 70)
+    print("Workshop planning complete. Good luck with your AI workshop!")
+    print("=" * 70)
+else:
+    print("\nNo responses received. Please restart the program to plan your workshop.")
