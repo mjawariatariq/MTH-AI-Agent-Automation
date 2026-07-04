@@ -4,19 +4,19 @@ Goal: AI apna output khud improve kare
 """
 
 import google.generativeai as genai
-import os
-from dotenv import load_dotenv
+from google.colab import userdata
 
-load_dotenv()
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+print("=" * 70)
+print("SELF-PROMPTING WITH REFINEMENT")
+print("=" * 70)
+
+# Get API key from Colab secrets
+api_key = userdata.get('GOOGLE_API_KEY')
+genai.configure(api_key=api_key)
 model = genai.GenerativeModel('gemini-2.5-flash')
 
-print("=" * 70)
-print(" SELF-PROMPTING WITH REFINEMENT")
-print("=" * 70)
-
 # STEP 1: Draft
-print("\n STEP 1: Initial Draft")
+print("\nSTEP 1: Initial Draft")
 print("-" * 70)
 
 draft_prompt = """
@@ -29,7 +29,7 @@ print("AI's Draft:")
 print(draft_response.text)
 
 # STEP 2: Self-Critique & Refine
-print("\n STEP 2: Self-Critique & Refinement")
+print("\nSTEP 2: Self-Critique & Refinement")
 print("-" * 70)
 
 refine_prompt = f"""
@@ -51,7 +51,38 @@ refined_response = model.generate_content(refine_prompt)
 print("AI's Refined Version:")
 print(refined_response.text)
 
+# STEP 3: Final Polish (Optional - extra refinement)
+print("\nSTEP 3: Final Polish")
+print("-" * 70)
+
+final_prompt = f"""
+Take this improved explanation:
+
+{refined_response.text}
+
+Now make it even better:
+1. Add a real-world example
+2. Make it more conversational
+3. Add a simple activity or experiment idea
+4. Keep it under 10 sentences
+
+Give the FINAL version:
+"""
+
+final_response = model.generate_content(final_prompt)
+print("AI's Final Version:")
+print(final_response.text)
+
 print("\n" + "=" * 70)
-print(" KEY INSIGHT:")
+print("KEY INSIGHT:")
 print("AI ne apne output ko judge kiya aur behtar banaya!")
-print("Yeh auto-correction ka basic foundation hai! ")
+print("Yeh auto-correction ka basic foundation hai!")
+print("=" * 70)
+
+# Bonus: Compare all versions
+print("\nCOMPARISON SUMMARY:")
+print("-" * 70)
+print(f"DRAFT (Version 1): {len(draft_response.text)} characters")
+print(f"REFINED (Version 2): {len(refined_response.text)} characters")
+print(f"FINAL (Version 3): {len(final_response.text)} characters")
+print("\nQuality improved through self-prompting!")
