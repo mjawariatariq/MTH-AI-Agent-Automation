@@ -2,19 +2,25 @@
 Complete Flipped Interaction Flow
 """
 
+import google.generativeai as genai
+from google.colab import userdata
+
+# Get API key from Colab secrets
+api_key = userdata.get('GOOGLE_API_KEY')
+genai.configure(api_key=api_key)
+model = genai.GenerativeModel('gemini-2.5-flash')
+
 def flipped_interaction():
     """Full flipped interaction between user and AI"""
     
     print("=" * 70)
-    print(" FLIPPED INTERACTION DEMO")
+    print("FLIPPED INTERACTION DEMO")
     print("=" * 70)
     
-# The conversation starts with user's basic request
-    conversation = """
-    User: I want to plan an AI workshop for students.
-    """
+    # The conversation starts with user's basic request
+    conversation = "User: I want to plan an AI workshop for students."
     
-# AI asks first question
+    # AI asks first question
     prompt = f"""
     You are an AI workshop planner. The user wants to plan a workshop.
     
@@ -26,16 +32,16 @@ def flipped_interaction():
     
     response = model.generate_content(prompt)
     question1 = response.text
-    print(f"\n AI: {question1}")
+    print(f"\nAI: {question1}")
         
-# User answers (simulated)
-    user_answer1 = input("\n Your answer: ")
+    # User answers (simulated)
+    user_answer1 = input("\nYour answer: ")
     
-# Update conversation
+    # Update conversation
     conversation += f"\nUser: {user_answer1}"
     conversation += f"\nAI: {question1}"
     
-# AI asks second question
+    # AI asks second question
     prompt2 = f"""
     You are an AI workshop planner.
     
@@ -47,17 +53,17 @@ def flipped_interaction():
     
     response2 = model.generate_content(prompt2)
     question2 = response2.text
-    print(f"\n AI: {question2}")
+    print(f"\nAI: {question2}")
     
-# User answers
-    user_answer2 = input("\n Your answer: ")
+    # User answers
+    user_answer2 = input("\nYour answer: ")
     
-# Update conversation
+    # Update conversation
     conversation += f"\nUser: {user_answer2}"
     conversation += f"\nAI: {question2}"
     
-# AI asks third question (optional)
-    choice = input("\n Want AI to ask one more question? (yes/no): ")
+    # AI asks third question (optional)
+    choice = input("\nWant AI to ask one more question? (yes/no): ")
     if choice.lower() == 'yes':
         prompt3 = f"""
         You are an AI workshop planner.
@@ -70,15 +76,15 @@ def flipped_interaction():
         
         response3 = model.generate_content(prompt3)
         question3 = response3.text
-        print(f"\n AI: {question3}")
+        print(f"\nAI: {question3}")
         
-        user_answer3 = input("\n Your answer: ")
+        user_answer3 = input("\nYour answer: ")
         conversation += f"\nUser: {user_answer3}"
         conversation += f"\nAI: {question3}"
     
-# Now AI creates the workshop outline
+    # Now AI creates the workshop outline
     print("\n" + "=" * 70)
-    print(" GENERATING WORKSHOP OUTLINE...")
+    print("GENERATING WORKSHOP OUTLINE...")
     print("=" * 70)
     
     outline_prompt = f"""
@@ -100,10 +106,11 @@ def flipped_interaction():
     """
     
     final_response = model.generate_content(outline_prompt)
-    print("\n WORKSHOP OUTLINE:")
+    print("\nWORKSHOP OUTLINE:")
     print("-" * 70)
     print(final_response.text)
     print("-" * 70)
 
 # Run the interaction
-# flipped_interaction()
+if __name__ == "__main__":
+    flipped_interaction()
