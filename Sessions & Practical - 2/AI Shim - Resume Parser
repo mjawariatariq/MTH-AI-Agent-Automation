@@ -1,14 +1,14 @@
 import google.generativeai as genai
-import os
+from google.colab import userdata
 import json
-from dotenv import load_dotenv
 
-load_dotenv()
-genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
+# Get API key from Colab secrets
+api_key = userdata.get('GOOGLE_API_KEY')
+genai.configure(api_key=api_key)
 model = genai.GenerativeModel('gemini-2.5-flash')
 
 print("=" * 60)
-print(" RESUME PARSER - Extract Information")
+print("RESUME PARSER - Extract Information")
 print("=" * 60)
 
 # Sample Resume Text
@@ -22,7 +22,7 @@ Experience: 3 years as Data Scientist
 Education: MS Computer Science from LUMS
 """
 
-print(" Resume Text:")
+print("Resume Text:")
 print("-" * 40)
 print(resume)
 print("-" * 40)
@@ -32,16 +32,119 @@ Extract information from this resume:
 
 {resume}
 
-Return ONLY JSON with these keys:
+Return ONLY valid JSON with these keys:
 - "name"
 - "email" 
 - "phone"
 - "city"
-- "skills" (as a list)
+- "skills" (as a list of strings)
 - "experience"
 - "education"
+
+Do not add any additional text, only return the JSON.
 """
 
 response = model.generate_content(prompt)
-print("\n Extracted JSON:")
+print("\nExtracted JSON (Raw Response):")
 print(response.text)
+
+# Try to parse the JSON
+try:
+    # Clean the response if it contains markdown formatting
+    cleaned_response = response.text.strip()
+    if cleaned_response.startswith('```json'):
+        cleaned_response = cleaned_response[7:]
+    if cleaned_response.endswith('```'):
+        cleaned_response = cleaned_response[:-3]
+    
+    parsed_json = json.loads(cleaned_response)
+    
+    print("\n" + "=" * 60)
+    print("PARSED JSON - Formatted Output")
+    print("=" * 60)
+    print(json.dumps(parsed_json, indent=2))
+    
+    # Display individual fields
+    print("\n" + "-" * 40)
+    print("EXTRACTED INFORMATION:")
+    print("-" * 40)
+    for key, value in parsed_json.items():
+        if key == "skills":
+            print(f"{key}: {', '.join(value)}")
+        else:
+            print(f"{key}: {value}")
+            
+except json.JSONDecodeError as e:
+    print(f"\nError parsing JSON: {e}")
+    print("Raw response was:")
+    print(response.text)
+
+# Bonus: Parse multiple resumes
+print("\n" + "=" * 60)
+print("BONUS: Parse Multiple Resumes")
+print("=" * 60)
+
+resumes = [
+    """
+    Name: Sara Khan
+    Email: sara.khan@email.com
+    Phone: 0301-7654321
+    City: Karachi
+    Skills: Java, Spring Boot, SQL
+    Experience: 5 years as Backend Developer
+    Education: BS Software Engineering from FAST
+    """,
+    """
+    Name: Ali Hassan
+    Email: ali.hassan@email.com
+    Phone: 0302-9876543
+    City: Islamabad
+    Skills: React, Node.js, MongoDB
+    Experience: 2 years as Full Stack Developer
+    Education: BS Computer Science from NUST
+    """
+]
+
+for i, resume_text in enumerate(resumes, 1):
+    print(f"\nResume {i}:")
+    print("-" * 30)
+    
+    prompt_multiple = f"""
+    Extract information from this resume:
+
+    {resume_text}
+
+    Return ONLY valid JSON with these keys:
+    - "name"
+    - "email" 
+    - "phone"
+    - "city"
+    - "skills" (as a list)
+    - "experience"
+    - "education"
+
+    Do not add any additional text, only return the JSON.
+    """
+    
+    response = model.generate_content(prompt_multiple)
+    
+    try:
+        cleaned_response = response.text.strip()
+        if cleaned_response.startswith('```json'):
+            cleaned_response = cleaned_response[7:]
+        if cleaned_response.endswith('```'):
+            cleaned_response = cleaned_response[:-3]
+            
+        parsed = json.loads(cleaned_response)
+        print(f"Name: {parsed.get('name', 'N/A')}")
+        print(f"Email: {parsed.get('email', 'N/A')}")
+        print(f"Skills: {', '.join(parsed.get('skills', []))}")
+        print(f"Experience: {parsed.get('experience', 'N/A')}")
+        
+    except json.JSONDecodeError:
+        print("Error parsing this resume")
+        print(f"Raw: {response.text[:100]}...")
+
+print("\n" + "=" * 60)
+print("RESUME PARSING COMPLETE!")
+print("=" * 60)
