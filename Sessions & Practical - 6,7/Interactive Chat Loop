@@ -1,0 +1,8 @@
+messages = []
+while True:
+    user = input("You: ")
+    if user == "quit": break
+    messages.append(HumanMessage(content=user))
+    result = app.invoke({"messages": messages})
+    print("AI:", result["messages"][-1].content)
+    messages.append(result["messages"][-1])
