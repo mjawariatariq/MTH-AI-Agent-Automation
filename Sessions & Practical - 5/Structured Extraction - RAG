@@ -1,0 +1,21 @@
+This is a great demo.
+
+Input PDF:
+
+Name: John
+
+Email:
+john@gmail.com
+
+Skills:
+Python
+SQL
+Django
+
+LLM extracts:
+
+{
+  "name":"John",
+  "email":"john@gmail.com",
+  "skills":["Python","SQL","Django"]
+}
