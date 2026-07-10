@@ -1,0 +1,45 @@
+import os
+from langchain.embeddings import HuggingFaceEmbeddings
+from langchain.text_splitter import CharacterTextSplitter
+from langchain_community.document_loaders import TextLoader
+from langchain_community.vectorstores import Chroma
+from langchain_openai import OpenAIEmbeddings
+
+# 1. Setup paths
+current_dir = os.path.dirname(os.path.abspath(__file__))
+file_path = os.path.join(current_dir, "books", "odyssey.txt")
+db_dir = os.path.join(current_dir, "db")
+
+# 2. Load document
+loader = TextLoader(file_path)
+documents = loader.load()
+
+# 3. Split into chunks
+text_splitter = CharacterTextSplitter(chunk_size=1000, chunk_overlap=0)
+docs = text_splitter.split_documents(documents)
+
+# 4. Create vector store with OpenAI
+openai_embeddings = OpenAIEmbeddings(model="text-embedding-ada-002")
+Chroma.from_documents(docs, openai_embeddings, 
+                     persist_directory="chroma_db_openai")
+
+# 5. Create vector store with Hugging Face
+huggingface_embeddings = HuggingFaceEmbeddings(
+    model_name="sentence-transformers/all-mpnet-base-v2"
+)
+Chroma.from_documents(docs, huggingface_embeddings,
+                     persist_directory="chroma_db_huggingface")
+
+# 6. Query function
+def query_vector_store(store_name, query, embedding_function):
+    db = Chroma(persist_directory=store_name, 
+                embedding_function=embedding_function)
+    retriever = db.as_retriever(
+        search_type="similarity_score_threshold",
+        search_kwargs={"k": 3, "score_threshold": 0.1}
+    )
+    return retriever.invoke(query)
+
+# 7. Example query
+query = "Who is Odysseus' wife?"
+results = query_vector_store("chroma_db_openai", query, openai_embeddings)
