@@ -1,0 +1,10 @@
+def run_with_trace(question):
+    print(f"Q: {question}")
+    result = app.invoke({"messages": [HumanMessage(content=question)]})
+    for msg in result["messages"]:
+        if hasattr(msg, "tool_calls") and msg.tool_calls:
+            for tc in msg.tool_calls:
+                print(f"🔧 Tool: {tc['name']} | Args: {tc['args']}")
+    print("A:", result["messages"][-1].content)
+
+run_with_trace("What's 100/4 and weather in Tokyo?")
