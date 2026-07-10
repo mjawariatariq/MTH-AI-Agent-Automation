@@ -1,0 +1,8 @@
+retriever = vectorstore.as_retriever(
+    search_kwargs={"k": 3}
+)
+
+docs = retriever.invoke("What is Machine Learning?")
+
+for doc in docs:
+    print(doc.page_content)
