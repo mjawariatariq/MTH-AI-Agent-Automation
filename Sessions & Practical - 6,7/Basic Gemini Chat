@@ -1,0 +1,17 @@
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langgraph.graph import StateGraph, MessagesState, START, END
+from langchain_core.messages import HumanMessage
+
+model = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", google_api_key="YOUR_KEY")
+
+def call_llm(state):
+    return {"messages": [model.invoke(state["messages"])]}
+
+workflow = StateGraph(MessagesState)
+workflow.add_node("call_llm", call_llm)
+workflow.add_edge(START, "call_llm")
+workflow.add_edge("call_llm", END)
+app = workflow.compile()
+
+result = app.invoke({"messages": [HumanMessage(content="What is LangGraph?")]})
+print(result["messages"][-1].content)
