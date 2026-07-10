@@ -1,0 +1,72 @@
+import os
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
+from dotenv import load_dotenv
+load_dotenv()
+
+# 2. Load Documents & Create FAISS Index
+
+import glob
+from langchain_community.vectorstores import FAISS
+from langchain_core.documents import Document
+from langchain_google_genai import GoogleGenerativeAIEmbeddings
+
+DOCS_DIR = "sample_docs"
+INDEX_DIR = "faiss_index"
+
+def load_and_split(docs_dir):
+    chunks = []
+    for path in glob.glob(os.path.join(docs_dir, "*.txt")):
+        with open(path, "r", encoding="utf-8") as f:
+            text = f.read()
+        source = os.path.basename(path)
+        paragraphs = [p.strip() for p in text.split("\n\n") if p.strip()]
+        current = ""
+        for para in paragraphs:
+            if len(current) + len(para) + 2 <= 500:
+                current = (current + "\n\n" + para).strip()
+            else:
+                if current:
+                    chunks.append(Document(page_content=current, metadata={"source": source}))
+                current = para
+        if current:
+            chunks.append(Document(page_content=current, metadata={"source": source}))
+    return chunks
+
+chunks = load_and_split(DOCS_DIR)
+print(f"{len(chunks)} chunks")
+
+# 3. Create Embeddings & Save Index
+embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
+vectorstore = FAISS.from_documents(chunks, embeddings)
+vectorstore.save_local(INDEX_DIR)
+print(f"Index saved to {INDEX_DIR}/")
+
+#  4. Math Tools
+from langchain_core.tools import tool
+
+@tool
+def add(a: int, b: int) -> int:
+    """Adds a and b."""
+    return a + b
+
+@tool
+def multiply(a: int, b: int) -> int:
+    """Multiplies a and b."""
+    return a * b
+
+@tool
+def divide(a: int, b: int) -> float:
+    """Divides a by b."""
+    return a / b
+
+# 5. RAG Tool - Search Documents
+
+@tool
+def search_docs(query: str) -> str:
+    """Search the knowledge base for information about AI/ML concepts,
+    LangGraph, RAG, embeddings, transformers, and related topics."""
+    embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
+    vectorstore = FAISS.load_local(INDEX_DIR, embeddings, allow_dangerous_deserialization=True)
+    docs = vectorstore.as_retriever(search_kwargs={"k": 3}).invoke(query)
+    return "\n\n---\n\n".join(doc.page_content for doc in docs)
