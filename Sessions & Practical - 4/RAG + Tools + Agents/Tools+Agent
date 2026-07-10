@@ -1,0 +1,58 @@
+# 6. Tools List
+
+tools = [add, multiply, divide, search_docs]
+tools_by_name = {t.name: t for t in tools}
+
+# 7. LLM Model 
+
+from langchain_groq import ChatGroq
+
+model = ChatGroq(model="openai/gpt-oss-20b", temperature=0)
+model_with_tools = model.bind_tools(tools)
+
+#  8. State Definition
+
+import operator
+from typing import Annotated
+from typing_extensions import TypedDict
+from langchain_core.messages import AnyMessage
+
+class MessagesState(TypedDict):
+    messages: Annotated[list[AnyMessage], operator.add]
+    llm_calls: int
+
+#  9. Nodes - LLM Call & Tool Node
+
+from langchain_core.messages import SystemMessage, ToolMessage
+
+def llm_call(state: MessagesState) -> dict:
+    response = model_with_tools.invoke(
+        [SystemMessage(content=(
+            "You are a helpful assistant that can perform arithmetic "
+            "and answer questions about AI/ML concepts. "
+            "Use search_docs for AI/ML questions, math tools for calculations."
+        ))] + state["messages"]
+    )
+    return {
+        "messages": [response],
+        "llm_calls": state.get("llm_calls", 0) + 1,
+    }
+
+def tool_node(state: MessagesState) -> dict:
+    results = []
+    for tool_call in state["messages"][-1].tool_calls:
+        t = tools_by_name[tool_call["name"]]
+        observation = t.invoke(tool_call["args"])
+        results.append(ToolMessage(content=str(observation), tool_call_id=tool_call["id"]))
+    return {"messages": results}
+
+# 10.  Conditional Edge - Should Continue
+
+from typing import Literal
+from langgraph.graph import END
+
+def should_continue(state: MessagesState) -> Literal["tool_node", "__end__"]:
+    last = state["messages"][-1]
+    if hasattr(last, "tool_calls") and last.tool_calls:
+        return "tool_node"
+    return END
