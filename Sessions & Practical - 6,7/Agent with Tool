@@ -1,0 +1,41 @@
+from langchain_google_genai import ChatGoogleGenerativeAI
+from langgraph.graph import StateGraph, MessagesState, START, END
+from langchain_core.tools import tool
+from langgraph.prebuilt import ToolNode, tools_condition
+from langchain_core.messages import HumanMessage
+
+# 1. Define tools
+@tool
+def get_weather(city: str) -> str:
+    """Get weather for a city."""
+    return f"Weather in {city}: Sunny, 25°C"
+
+@tool
+def calculate(expression: str) -> str:
+    """Calculate math expression."""
+    return str(eval(expression))
+
+# 2. Create model with tools
+model = ChatGoogleGenerativeAI(model="gemini-2.0-flash-exp", google_api_key="YOUR_KEY")
+tools = [get_weather, calculate]
+model_with_tools = model.bind_tools(tools)
+
+# 3. Define agent nodes
+def agent(state):
+    response = model_with_tools.invoke(state["messages"])
+    return {"messages": [response]}
+
+tool_node = ToolNode(tools)
+
+# 4. Build graph
+workflow = StateGraph(MessagesState)
+workflow.add_node("agent", agent)
+workflow.add_node("tools", tool_node)
+workflow.add_edge(START, "agent")
+workflow.add_conditional_edges("agent", tools_condition)
+workflow.add_edge("tools", "agent")
+app = workflow.compile()
+
+# 5. Test it
+result = app.invoke({"messages": [HumanMessage(content="What's 25*4 and weather in London?")]})
+print(result["messages"][-1].content)
