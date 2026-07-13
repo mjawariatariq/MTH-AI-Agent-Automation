@@ -1,0 +1,94 @@
+# Advanced Hybrid Search with Multiple Retrieval Methods
+
+class HybridSearch:
+    def __init__(self, documents):
+        # Setup embedding
+        self.embeddings = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-MiniLM-L6-v2"
+        )
+        
+        # Create vectorstore
+        self.vectorstore = Chroma.from_texts(
+            texts=documents,
+            embedding=self.embeddings
+        )
+    
+    def similarity_search(self, query, k=3):
+        """Simple similarity search"""
+        retriever = self.vectorstore.as_retriever(
+            search_type="similarity",
+            search_kwargs={"k": k}
+        )
+        return retriever.invoke(query)
+    
+    def mmr_search(self, query, k=3):
+        """MMR search for diversity"""
+        retriever = self.vectorstore.as_retriever(
+            search_type="mmr",
+            search_kwargs={"k": k, "fetch_k": 10}
+        )
+        return retriever.invoke(query)
+    
+    def threshold_search(self, query, k=3, threshold=0.7):
+        """Search with similarity threshold"""
+        retriever = self.vectorstore.as_retriever(
+            search_type="similarity_score_threshold",
+            search_kwargs={
+                "k": k,
+                "score_threshold": threshold
+            }
+        )
+        return retriever.invoke(query)
+    
+    def display_results(self, query, search_type="similarity", k=3):
+        """Display results in student-friendly format"""
+        print(f"\n {'='*50}")
+        print(f" Search Type: {search_type.upper()}")
+        print(f" Query: '{query}'")
+        print(f" Showing top {k} results")
+        print('='*50)
+        
+        # Get results based on search type
+        if search_type == "similarity":
+            results = self.similarity_search(query, k)
+        elif search_type == "mmr":
+            results = self.mmr_search(query, k)
+        else:
+            results = self.threshold_search(query, k)
+        
+        # Display results
+        if not results:
+            print(" No results found!")
+            return
+        
+        for i, doc in enumerate(results, 1):
+            print(f"\n Result #{i}")
+            print(f"   Content: {doc.page_content}")
+            if hasattr(doc, 'metadata') and doc.metadata:
+                print(f"   Metadata: {doc.metadata}")
+        
+        return results
+
+# Usage Example
+documents = [
+    "Pakistan is a country in South Asia with a rich history.",
+    "Islamabad is the capital city of Pakistan.",
+    "Lahore is famous for its culture, food, and historical places.",
+    "Karachi is the largest city and economic hub of Pakistan.",
+    "Pakistan's population is over 240 million people.",
+    "The independence of Pakistan was achieved on 14 August 1947.",
+    "Urdu and English are the official languages of Pakistan."
+]
+
+# Create search instance
+search = HybridSearch(documents)
+
+# Test different search types
+queries = [
+    "Which city is the capital?",
+    "Tell me about major cities in Pakistan",
+    "When did Pakistan become independent?"
+]
+
+for query in queries:
+    search.display_results(query, "similarity", k=3)
